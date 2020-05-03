@@ -40,7 +40,12 @@ resource "google_service_account" "vault" {
 }
 
 resource "google_storage_bucket" "vault" {
-  name = "${var.name}-${lower(random_id.vault.hex)}-bucket"
+  name          = "${var.name}-${lower(random_id.vault.hex)}-bucket"
+  force_destroy = var.bucket_force_destroy
+  location = var.location
+  /*encryption {
+    default_kms_key_name = google_kms_crypto_key.bucket.self_link
+  }*/
 }
 
 resource "google_storage_bucket_iam_member" "member" {
@@ -57,7 +62,13 @@ resource "google_kms_key_ring" "vault" {
 
 # Create a crypto key for the key ring, rotate daily
 resource "google_kms_crypto_key" "vault" {
-  name            = "${var.name}-key"
+  name            = "${var.name}-vault-key"
+  key_ring        = google_kms_key_ring.vault.self_link
+  rotation_period = "86400s"
+}
+
+resource "google_kms_crypto_key" "bucket" {
+  name            = "${var.name}-bucket-key"
   key_ring        = google_kms_key_ring.vault.self_link
   rotation_period = "86400s"
 }
