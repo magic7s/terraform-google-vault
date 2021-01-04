@@ -61,7 +61,7 @@ resource "google_kms_key_ring" "vault" {
 resource "google_kms_crypto_key" "vault" {
   name            = "${var.name}-key"
   key_ring        = google_kms_key_ring.vault.self_link
-  rotation_period = "86400s"
+  rotation_period = "2592000s" # 30 Days
 }
 
 # Add the service account to the Keyring
