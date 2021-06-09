@@ -1,8 +1,7 @@
-provider "random" {}
-
 locals {
   vault_config = jsonencode(
     {
+<<<<<<< HEAD
       "storage" : {
         "gcs" : {
           "bucket" : google_storage_bucket.vault.name
@@ -14,34 +13,55 @@ locals {
           "region" : var.location,
           "key_ring" : google_kms_key_ring.vault.name,
           "crypto_key" : google_kms_crypto_key.vault.name
+=======
+      "storage" = {
+        "gcs" = {
+          "bucket"     = local.vault_storage_bucket_name
+          "ha_enabled" = "false"
         }
       },
-      "default_lease_ttl" : "168h",
-      "max_lease_ttl" : "720h",
-      "disable_mlock" : "true",
-      "listener" : {
-        "tcp" : {
-          "address" : "0.0.0.0:8080",
-          "tls_disable" : "1"
+      "seal" = {
+        "gcpckms" = {
+          "project"    = var.project,
+          "region"     = var.location,
+          "key_ring"   = local.vault_kms_keyring_name,
+          "crypto_key" = google_kms_crypto_key.vault.name
+>>>>>>> ec7650b04ec0ed369cea4f95b056c0c39e704116
         }
       },
+      "default_lease_ttl" = "168h",
+      "max_lease_ttl"     = "720h",
+      "disable_mlock"     = "true",
+      "listener" = {
+        "tcp" = {
+          "address"     = "0.0.0.0:8080",
+          "tls_disable" = "1"
+        }
+      },
+<<<<<<< HEAD
       "ui" : var.vault_ui
+=======
+      "ui" = var.vault_ui
+>>>>>>> ec7650b04ec0ed369cea4f95b056c0c39e704116
     }
   )
+  vault_kms_keyring_name    = var.vault_kms_keyring_name != "" ? var.vault_kms_keyring_name : "${var.name}-${lower(random_id.vault.hex)}-kr"
+  vault_storage_bucket_name = var.vault_storage_bucket_name != "" ? var.vault_storage_bucket_name : "${var.name}-${lower(random_id.vault.hex)}-bucket"
 }
-
 
 resource "random_id" "vault" {
   byte_length = 2
 }
 
 resource "google_service_account" "vault" {
-  account_id   = "vault-sa"
+  project      = var.project
+  account_id   = var.vault_service_account_id
   display_name = "Vault Service Account for KMS auto-unseal"
 }
 
 resource "google_storage_bucket" "vault" {
-  name          = "${var.name}-${lower(random_id.vault.hex)}-bucket"
+  name          = local.vault_storage_bucket_name
+  project       = var.project
   force_destroy = var.bucket_force_destroy
 }
 
@@ -53,7 +73,8 @@ resource "google_storage_bucket_iam_member" "member" {
 
 # Create a KMS key ring
 resource "google_kms_key_ring" "vault" {
-  name     = "${var.name}-${lower(random_id.vault.hex)}-kr"
+  name     = local.vault_kms_keyring_name
+  project  = var.project
   location = var.location
 }
 
@@ -61,7 +82,16 @@ resource "google_kms_key_ring" "vault" {
 resource "google_kms_crypto_key" "vault" {
   name            = "${var.name}-key"
   key_ring        = google_kms_key_ring.vault.self_link
+<<<<<<< HEAD
   rotation_period = "2592000s" # 30 Days
+=======
+  rotation_period = var.vault_kms_key_rotation
+
+  version_template {
+    algorithm        = var.vault_kms_key_algorithm
+    protection_level = var.vault_kms_key_protection_level
+  }
+>>>>>>> ec7650b04ec0ed369cea4f95b056c0c39e704116
 }
 
 # Add the service account to the Keyring
@@ -73,6 +103,7 @@ resource "google_kms_key_ring_iam_member" "vault" {
 
 resource "google_cloud_run_service" "default" {
   name                       = var.name
+  project                    = var.project
   location                   = var.location
   autogenerate_revision_name = true
 
@@ -83,7 +114,10 @@ resource "google_cloud_run_service" "default" {
   template {
     metadata {
       annotations = {
-        "autoscaling.knative.dev/maxScale" = 1 # HA not Supported
+        "autoscaling.knative.dev/maxScale"        = 1 # HA not Supported
+        "run.googleapis.com/vpc-access-connector" = var.vpc_connector != "" ? var.vpc_connector : null
+        # Hardcoded here after a change in the Cloud Run API response
+        "run.googleapis.com/sandbox" = "gvisor"
       }
     }
     spec {
@@ -140,4 +174,8 @@ resource "google_cloud_run_service_iam_policy" "noauth" {
 
 output "app_url" {
   value = google_cloud_run_service.default.status[0].url
+}
+
+output "service_account_email" {
+  value = google_service_account.vault.email
 }
