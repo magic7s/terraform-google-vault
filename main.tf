@@ -5,15 +5,15 @@ locals {
     {
       "storage" : {
         "gcs" : {
-          "bucket" : "${google_storage_bucket.vault.name}"
+          "bucket" : google_storage_bucket.vault.name
         }
       },
       "seal" : {
         "gcpckms" : {
-          "project" : "${var.project}",
-          "region" : "${var.location}",
-          "key_ring" : "${google_kms_key_ring.vault.name}",
-          "crypto_key" : "${google_kms_crypto_key.vault.name}"
+          "project" : var.project,
+          "region" : var.location,
+          "key_ring" : google_kms_key_ring.vault.name,
+          "crypto_key" : google_kms_crypto_key.vault.name
         }
       },
       "default_lease_ttl" : "168h",
@@ -25,7 +25,7 @@ locals {
           "tls_disable" : "1"
         }
       },
-      "ui" : "${var.vault_ui}"
+      "ui" : var.vault_ui
     }
   )
 }
