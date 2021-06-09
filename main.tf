@@ -1,19 +1,6 @@
 locals {
   vault_config = jsonencode(
     {
-<<<<<<< HEAD
-      "storage" : {
-        "gcs" : {
-          "bucket" : google_storage_bucket.vault.name
-        }
-      },
-      "seal" : {
-        "gcpckms" : {
-          "project" : var.project,
-          "region" : var.location,
-          "key_ring" : google_kms_key_ring.vault.name,
-          "crypto_key" : google_kms_crypto_key.vault.name
-=======
       "storage" = {
         "gcs" = {
           "bucket"     = local.vault_storage_bucket_name
@@ -26,7 +13,6 @@ locals {
           "region"     = var.location,
           "key_ring"   = local.vault_kms_keyring_name,
           "crypto_key" = google_kms_crypto_key.vault.name
->>>>>>> ec7650b04ec0ed369cea4f95b056c0c39e704116
         }
       },
       "default_lease_ttl" = "168h",
@@ -38,11 +24,7 @@ locals {
           "tls_disable" = "1"
         }
       },
-<<<<<<< HEAD
-      "ui" : var.vault_ui
-=======
       "ui" = var.vault_ui
->>>>>>> ec7650b04ec0ed369cea4f95b056c0c39e704116
     }
   )
   vault_kms_keyring_name    = var.vault_kms_keyring_name != "" ? var.vault_kms_keyring_name : "${var.name}-${lower(random_id.vault.hex)}-kr"
@@ -82,16 +64,12 @@ resource "google_kms_key_ring" "vault" {
 resource "google_kms_crypto_key" "vault" {
   name            = "${var.name}-key"
   key_ring        = google_kms_key_ring.vault.self_link
-<<<<<<< HEAD
-  rotation_period = "2592000s" # 30 Days
-=======
   rotation_period = var.vault_kms_key_rotation
 
   version_template {
     algorithm        = var.vault_kms_key_algorithm
     protection_level = var.vault_kms_key_protection_level
   }
->>>>>>> ec7650b04ec0ed369cea4f95b056c0c39e704116
 }
 
 # Add the service account to the Keyring
