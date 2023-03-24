@@ -1,11 +1,13 @@
 variable "name" {
   description = "Application name."
   type        = string
+  default     = "vault"
 }
 
 variable "location" {
   description = "Google location where resources are to be created."
   type        = string
+  default     = "us-central1"
 }
 
 variable "project" {
@@ -16,6 +18,7 @@ variable "project" {
 variable "vault_image" {
   description = "Vault docker image (i.e.hashicorp/vault:1.7.2 -- Now supports docker hub directly."
   type        = string
+  default     = "hashicorp/vault:1.12"
 }
 
 variable "bucket_force_destroy" {
@@ -57,7 +60,7 @@ variable "vault_kms_keyring_name" {
 variable "vault_kms_key_rotation" {
   description = "The period for KMS key rotation."
   type        = string
-  default     = "7776000s"
+  default     = "2592000s"
 }
 
 variable "vault_kms_key_algorithm" {
