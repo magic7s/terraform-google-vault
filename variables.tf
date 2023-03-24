@@ -14,7 +14,7 @@ variable "project" {
 }
 
 variable "vault_image" {
-  description = "Vault docker image (i.e. us.gcr.io/vault-226618/vault:latest)."
+  description = "Vault docker image (i.e.hashicorp/vault:1.7.2 -- Now supports docker hub directly."
   type        = string
 }
 
